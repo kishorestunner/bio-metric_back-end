@@ -1,43 +1,52 @@
 const pool = require("../db/db");
 
-// REGISTER USER
+// ✅ REGISTER USER
 exports.registerUser = async (req, res) => {
   try {
-    const { name, email, biometricData } = req.body;
+    const { name, email, templateData, quality } = req.body;
 
     await pool.query(
-      `INSERT INTO users (name, email, pid_data, hmac, skey)
-       VALUES ($1, $2, $3, $4, $5)`,
-      [
-        name,
-        email,
-        biometricData.pidData,
-        biometricData.hmac,
-        biometricData.skey,
-      ]
+      `INSERT INTO users (name, email, template_data, quality)
+       VALUES ($1, $2, $3, $4)`,
+      [name, email, templateData, quality]
     );
 
-    res.json({ message: "User registered successfully" });
+    res.json({ message: "User registered successfully ✅" });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
 
-// VERIFY USER
+// ✅ VERIFY USER (DEMO MATCH)
 exports.verifyUser = async (req, res) => {
   try {
-    const { pidData } = req.body;
+    const { templateData } = req.body;
 
     const result = await pool.query("SELECT * FROM users");
 
-    const user = result.rows.find(u => u.pid_data === pidData);
+    let matchedUser = null;
 
-    if (!user) {
-      return res.status(401).json({ message: "Not matched" });
+    for (let user of result.rows) {
+      if (
+        user.template_data &&
+        user.template_data.substring(0, 20) === templateData.substring(0, 20)
+      ) {
+        matchedUser = user;
+        break;
+      }
     }
 
-    res.json({ message: "Login success", user });
+    if (!matchedUser) {
+      return res.status(401).json({ message: "Fingerprint not matched ❌" });
+    }
+
+    res.json({
+      message: "Login success ✅",
+      user: matchedUser,
+    });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 };
