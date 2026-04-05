@@ -12,9 +12,21 @@
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "node-fetch": "^3.3.2",
     "pg": "^8.20.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kishorestunner/bio-metric_back-end.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kishorestunner/bio-metric_back-end/issues"
+  },
+  "homepage": "https://github.com/kishorestunner/bio-metric_back-end#readme"
 }

@@ -1,52 +1,46 @@
 const pool = require("../db/db");
 
-// ✅ REGISTER USER
+// SAVE USER
 exports.registerUser = async (req, res) => {
   try {
-    const { name, email, templateData, quality } = req.body;
+    const { name, email, template_data, quality } = req.body;
 
-    await pool.query(
-      `INSERT INTO users (name, email, template_data, quality)
-       VALUES ($1, $2, $3, $4)`,
-      [name, email, templateData, quality]
+    if (!template_data) {
+      return res.status(400).json({ error: "Fingerprint missing" });
+    }
+
+    const result = await pool.query(
+      "INSERT INTO users (name,email,template_data,quality) VALUES ($1,$2,$3,$4) RETURNING *",
+      [name, email, template_data, quality || 0]
     );
 
-    res.json({ message: "User registered successfully ✅" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
+    res.json(result.rows[0]);
+
+  } catch (err) {
+    if (err.code === "23505") {
+      return res.status(400).json({ error: "Email exists" });
+    }
+    res.status(500).json({ error: "Server error" });
   }
 };
 
-// ✅ VERIFY USER (DEMO MATCH)
-exports.verifyUser = async (req, res) => {
+// GET USER
+exports.getUser = async (req, res) => {
   try {
-    const { templateData } = req.body;
+    const { email } = req.body;
 
-    const result = await pool.query("SELECT * FROM users");
+    const result = await pool.query(
+      "SELECT * FROM users WHERE email=$1",
+      [email]
+    );
 
-    let matchedUser = null;
-
-    for (let user of result.rows) {
-      if (
-        user.template_data &&
-        user.template_data.substring(0, 20) === templateData.substring(0, 20)
-      ) {
-        matchedUser = user;
-        break;
-      }
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
     }
 
-    if (!matchedUser) {
-      return res.status(401).json({ message: "Fingerprint not matched ❌" });
-    }
+    res.json(result.rows[0]);
 
-    res.json({
-      message: "Login success ✅",
-      user: matchedUser,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
+  } catch {
+    res.status(500).json({ error: "Error" });
   }
 };
